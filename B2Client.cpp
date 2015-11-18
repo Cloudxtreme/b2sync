@@ -4,11 +4,11 @@
 
 #include "B2Client.h"
 
-B2APIMessage<B2AuthToken> B2Client::authenticate(const string &accountId, const string &applicationKey) {
+B2APIMessage<B2AuthorizeAccountResponse> B2Client::authenticate(const string &accountId, const string &applicationKey) {
     curl::curl_easy curl;
 
     std::ostringstream data;
-
+    std::ostringstream header;
     curl::curl_ios<ostringstream> body(data);
     curl.add<CURLOPT_WRITEFUNCTION>(body.get_function());
     curl.add<CURLOPT_WRITEDATA>(body.get_stream());
@@ -19,7 +19,7 @@ B2APIMessage<B2AuthToken> B2Client::authenticate(const string &accountId, const 
     std::string authHeader = accountId + ":" + applicationKey;
     curl.add<CURLOPT_USERPWD>(authHeader.c_str());
 
-    B2APIMessage<B2AuthToken> result;
+    B2APIMessage<B2AuthorizeAccountResponse> result;
 
     try {
         curl.perform();
@@ -29,9 +29,13 @@ B2APIMessage<B2AuthToken> B2Client::authenticate(const string &accountId, const 
         ss << data.str();
         boost::property_tree::json_parser::read_json(ss, jsonpt);
 
-        cout << jsonpt.get<std::string>("authorizationToken") << std::endl;
-        result.result = std::make_shared<B2AuthToken>(jsonpt.get<std::string>("authorizationToken"));
+        result.result = std::make_shared<B2AuthorizeAccountResponse>(
+                jsonpt.get<std::string>("authorizationToken"),
+                jsonpt.get<std::string>("apiUrl"),
+                jsonpt.get<std::string>("downloadUrl")
+        );
         result.success = true;
+
     }
     catch (curl_easy_exception e) {
 #if DEBUG

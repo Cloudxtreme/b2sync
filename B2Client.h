@@ -9,11 +9,11 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "B2APIMessage.h"
-#include "B2AuthToken.h"
+#include "B2AuthorizeAccountResponse.h"
 
 class B2Client {
 public:
-    B2APIMessage<B2AuthToken> authenticate(const string &accountId, const string &applicationKey);
+    B2APIMessage<B2AuthorizeAccountResponse> authenticate(const string &accountId, const string &applicationKey);
 };
 
 #endif //B2SYNC_B2CLIENT_H
