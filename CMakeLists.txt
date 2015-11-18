@@ -3,7 +3,7 @@ project(b2sync)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES main.cpp B2Client.cpp B2Client.h B2AuthenticatedClient.cpp B2AuthenticatedClient.h)
 add_executable(b2sync ${SOURCE_FILES})
 
 # Include gitcpp
