@@ -6,15 +6,14 @@
 #define B2SYNC_B2CLIENT_H
 
 #include <curl_easy.h>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include "B2APIMessage.h"
+#include "B2AuthToken.h"
 
 class B2Client {
 public:
-    B2Client();
-    ~B2Client();
-
-
-protected:
-    curl::curl_easy *m_curl;
+    B2APIMessage<B2AuthToken> authenticate(const string &accountId, const string &applicationKey);
 };
 
 #endif //B2SYNC_B2CLIENT_H
