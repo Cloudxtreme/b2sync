@@ -7,7 +7,7 @@ int main() {
     B2Client client;
     auto token = client.authenticate("a", "b");
     if (! token.success) {
-        cout << "Could not log in to B2 API";
+        cout << "Could not log in to B2 API" << std::endl;
         return 1;
     }
 

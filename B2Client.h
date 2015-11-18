@@ -6,8 +6,8 @@
 #define B2SYNC_B2CLIENT_H
 
 #include <curl_easy.h>
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include "B2APIMessage.h"
 #include "B2AuthToken.h"
 

@@ -2,14 +2,16 @@
 // Created by Oliver Albers on 18.11.15.
 //
 
-#include <curl_receiver.h>
 #include "B2Client.h"
 
 B2APIMessage<B2AuthToken> B2Client::authenticate(const string &accountId, const string &applicationKey) {
-    ostringstream data;
+    curl::curl_easy curl;
 
-    curl::curl_ios<ostringstream> curl_writer(data);
-    curl::curl_easy curl(curl_writer);
+    std::ostringstream data;
+
+    curl::curl_ios<ostringstream> body(data);
+    curl.add<CURLOPT_WRITEFUNCTION>(body.get_function());
+    curl.add<CURLOPT_WRITEDATA>(body.get_stream());
 
     curl.add<CURLOPT_URL>("https://api.backblaze.com/b2api/v1/b2_authorize_account");
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
@@ -22,7 +24,23 @@ B2APIMessage<B2AuthToken> B2Client::authenticate(const string &accountId, const 
     try {
         curl.perform();
 
-    } catch (curl_easy_exception e) {
+        boost::property_tree::ptree jsonpt;
+        std::stringstream ss;
+        ss << data.str();
+        boost::property_tree::json_parser::read_json(ss, jsonpt);
+
+        cout << jsonpt.get<std::string>("massage") << std::endl;
+
+    }
+    catch (curl_easy_exception e) {
+#if DEBUG
+        e.print_traceback();
+#endif
+        result.success = false;
+    }
+    catch (boost::property_tree::ptree_bad_path e) {
+        cout << "Could not access JSON property frop API result: " << e.what() << std::endl;
+
         result.success = false;
     }
 

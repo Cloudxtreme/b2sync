@@ -16,7 +16,7 @@ target_link_libraries(b2sync curlcpp)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost COMPONENTS system archive)
+find_package(Boost COMPONENTS system propertytree)
 
 include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(b2sync ${Boost_LIBRARIES})
