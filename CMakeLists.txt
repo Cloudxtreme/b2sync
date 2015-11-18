@@ -6,6 +6,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(SOURCE_FILES main.cpp B2Client.cpp B2Client.h B2AuthToken.h B2APIMessage.h)
 add_executable(b2sync ${SOURCE_FILES})
 
+# Add config file
+file(COPY b2config.info DESTINATION "${b2sync_BINARY_DIR}")
+
 # Include gitcpp
 add_subdirectory(curlcpp)
 include_directories(${CURLCPP_SOURCE_DIR}/include)

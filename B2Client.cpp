@@ -29,8 +29,9 @@ B2APIMessage<B2AuthToken> B2Client::authenticate(const string &accountId, const 
         ss << data.str();
         boost::property_tree::json_parser::read_json(ss, jsonpt);
 
-        cout << jsonpt.get<std::string>("massage") << std::endl;
-
+        cout << jsonpt.get<std::string>("authorizationToken") << std::endl;
+        result.result = std::make_shared<B2AuthToken>(jsonpt.get<std::string>("authorizationToken"));
+        result.success = true;
     }
     catch (curl_easy_exception e) {
 #if DEBUG

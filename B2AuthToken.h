@@ -7,7 +7,8 @@
 
 
 class B2AuthToken {
-    B2AuthToken(std::string token) : m_token(token) {};
+public:
+    B2AuthToken(const std::string& token) : m_token(token) {};
 private:
     std::string m_token;
 };
