@@ -42,19 +42,13 @@ int main() {
         b2config.put<std::string>("downloadurl", token.result->getDownloadUrl());
 
         boost::property_tree::info_parser::write_info("b2config.info", b2config);
-
-        authtoken = token.result;
     } else {
-        authtoken = std::make_shared<B2AuthorizeAccountResponse>(
+        client.authenticate(
                 b2config.get<std::string>("token"),
                 b2config.get<std::string>("apiurl"),
                 b2config.get<std::string>("downloadurl")
         );
     }
-
-    cout << authtoken->getToken() << std::endl
-         << authtoken->getAPIUrl() << std::endl
-         << authtoken->getDownloadUrl() << std::endl;
 
     return 0;
 }

@@ -36,6 +36,7 @@ B2APIMessage<B2AuthorizeAccountResponse> B2Client::authenticate(const string &ac
         );
         result.success = true;
 
+        m_auth = result.result;
     }
     catch (curl_easy_exception e) {
 #if DEBUG
@@ -50,4 +51,12 @@ B2APIMessage<B2AuthorizeAccountResponse> B2Client::authenticate(const string &ac
     }
 
     return result;
+}
+
+void B2Client::authenticate(const string &token, const string &apiUrl, const string &downloadUrl) {
+    m_auth = std::make_shared<B2AuthorizeAccountResponse>(
+            token,
+            apiUrl,
+            downloadUrl
+    );
 }
