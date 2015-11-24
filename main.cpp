@@ -10,19 +10,51 @@ int main() {
     boost::property_tree::info_parser::read_info("b2config.info", b2config);
 
     B2Client client;
-    // If no access token is known the account has to be authenticated firs
-    auto token = client.authenticate(
-            b2config.get<std::string>("accountid"),
-            b2config.get<std::string>("applicationkey")
-    );
-    if (!token.success) {
-        cout << "Could not log in to B2 API" << std::endl;
+
+    int configerrs = 0;
+    if (b2config.count("accountid") == 0) {
+        cout << "b2config.info does not contain the key accountid" << std::endl;
+        configerrs++;
+    }
+    if (b2config.count("applicationkey") == 0) {
+        cout << "b2config.info does not contain the key applicationkey" << std::endl;
+        configerrs++;
+    }
+    if (configerrs > 0) {
         return 1;
     }
 
-    cout << token.result->getToken() << std::endl
-         << token.result->getAPIUrl() << std::endl
-         << token.result->getDownloadUrl() << std::endl;
+    shared_ptr<B2AuthorizeAccountResponse> authtoken = nullptr;
+
+    if (b2config.count("token") == 0 || b2config.count("apiurl") == 0 || b2config.count("downloadurl") == 0) {
+        // If no access token is known the account has to be authenticated first
+        auto token = client.authenticate(
+                b2config.get<std::string>("accountid"),
+                b2config.get<std::string>("applicationkey")
+        );
+        if (!token.success) {
+            cout << "Could not log in to B2 API" << std::endl;
+            return 1;
+        }
+
+        b2config.put<std::string>("token", token.result->getToken());
+        b2config.put<std::string>("apiurl", token.result->getAPIUrl());
+        b2config.put<std::string>("downloadurl", token.result->getDownloadUrl());
+
+        boost::property_tree::info_parser::write_info("b2config.info", b2config);
+
+        authtoken = token.result;
+    } else {
+        authtoken = std::make_shared<B2AuthorizeAccountResponse>(
+                b2config.get<std::string>("token"),
+                b2config.get<std::string>("apiurl"),
+                b2config.get<std::string>("downloadurl")
+        );
+    }
+
+    cout << authtoken->getToken() << std::endl
+         << authtoken->getAPIUrl() << std::endl
+         << authtoken->getDownloadUrl() << std::endl;
 
     return 0;
 }
