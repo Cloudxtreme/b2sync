@@ -5,8 +5,6 @@
 #ifndef B2SYNC_B2BUCKET_H
 #define B2SYNC_B2BUCKET_H
 
-
-#include <iosfwd>
 #include <string>
 
 class B2Bucket {
