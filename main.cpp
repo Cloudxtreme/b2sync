@@ -9,7 +9,6 @@ int main() {
     boost::property_tree::ptree b2config;
     boost::property_tree::info_parser::read_info("b2config.info", b2config);
 
-    B2Client client;
 
     int configerrs = 0;
     if (b2config.count("accountid") == 0) {
@@ -23,6 +22,8 @@ int main() {
     if (configerrs > 0) {
         return 1;
     }
+
+    B2Client client(b2config.get<std::string>("accountid"));
 
     shared_ptr<B2AuthorizeAccountResponse> authtoken = nullptr;
 
@@ -49,6 +50,8 @@ int main() {
                 b2config.get<std::string>("downloadurl")
         );
     }
+
+    auto buckets = client.listBuckets();
 
     return 0;
 }
