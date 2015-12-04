@@ -1,7 +1,3 @@
-//
-// Created by Oliver Albers on 18.11.15.
-//
-
 #include <curl_header.h>
 #include <curl_form.h>
 #include "B2Client.h"
@@ -66,10 +62,17 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
     std::ostringstream data;
     std::ostringstream header;
     curl::curl_ios<ostringstream> body(data);
-    //curl.add<CURLOPT_WRITEFUNCTION>(body.get_function());
-    //curl.add<CURLOPT_WRITEDATA>(body.get_stream());
+    curl.add<CURLOPT_WRITEFUNCTION>(body.get_function());
+    curl.add<CURLOPT_WRITEDATA>(body.get_stream());
 
-    curl.add<CURLOPT_URL>("https://api.backblaze.com/b2api/v1/b2_list_buckets");
+    // TODO: C strings? ugh, replace this
+    const char* apiUrlPart = "/b2api/v1/b2_list_buckets";
+    const int apiUrlLength = 25; // Length of string above
+    char* apiUrl = new char[m_auth->getAPIUrl().length() + apiUrlLength + 1];
+    strcpy(apiUrl, m_auth->getAPIUrl().data());
+    strncat(apiUrl, apiUrlPart, apiUrlLength);
+
+    curl.add<CURLOPT_URL>(apiUrl);
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
 
     curl::curl_header httpheader = {
@@ -77,22 +80,41 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
     };
     curl.add<CURLOPT_HTTPHEADER>(httpheader.get());
 
-    curl::curl_form form;
-    auto accountid_form = curl_pair<CURLformoption, std::string>(CURLFORM_COPYNAME, "accountId");
-    auto accountid_content = curl_pair<CURLformoption, std::string>(CURLFORM_COPYCONTENTS, m_accountid);
+    char* postData = new char[14 + m_accountid.length() + 1 + 1];
+    strcpy(postData, "{\"accountId\":\"");
+    strncat(postData, m_accountid.data(), m_accountid.length());
+    strncat(postData, "\"}", 2);
+    curl.add<CURLOPT_POSTFIELDS>(postData);
+    curl.add<CURLOPT_POST>(1L);
 
     B2APIMessage<B2ListBucketsResponse> result;
 
     try {
-        form.add(accountid_form, accountid_content);
 
         curl.perform();
 
-      /*  boost::property_tree::ptree jsonpt;
+        /*
+{
+  "buckets": [
+    {
+      "accountId": "account id be here",
+      "bucketId": "bucket id be here",
+      "bucketName": "bucket name",
+      "bucketType": "allPrivate"
+    }
+  ]
+}
+         */
+        boost::property_tree::ptree jsonpt;
         std::stringstream ss;
+        auto datastr = data.str();
         ss << data.str();
         boost::property_tree::json_parser::read_json(ss, jsonpt);
-*/
+
+        for(auto bucket : jsonpt.get_child("buckets")) {
+            cout << bucket.second.get<std::string>("bucketId") << std::endl;
+            cout << bucket.second.get<std::string>("bucketName") << std::endl;
+        }
 /*        result.result = std::make_shared<B2AuthorizeAccountResponse>(
                 jsonpt.get<std::string>("authorizationToken"),
                 jsonpt.get<std::string>("apiUrl"),
@@ -108,6 +130,9 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
 
         result.success = false;
     }
+
+    delete[] apiUrl;
+    delete[] postData;
 
     return result;
 }
