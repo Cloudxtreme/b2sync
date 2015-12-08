@@ -65,14 +65,10 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
     curl.add<CURLOPT_WRITEFUNCTION>(body.get_function());
     curl.add<CURLOPT_WRITEDATA>(body.get_stream());
 
-    // TODO: C strings? ugh, replace this
-    const char* apiUrlPart = "/b2api/v1/b2_list_buckets";
-    const int apiUrlLength = 25; // Length of string above
-    char* apiUrl = new char[m_auth->getAPIUrl().length() + apiUrlLength + 1];
-    strcpy(apiUrl, m_auth->getAPIUrl().data());
-    strncat(apiUrl, apiUrlPart, apiUrlLength);
+    auto apiUrl = m_auth->getAPIUrl() + "/b2api/v1/b2_list_buckets";
+    char* apiUrlC = const_cast<char*>(apiUrl.c_str());
 
-    curl.add<CURLOPT_URL>(apiUrl);
+    curl.add<CURLOPT_URL>(apiUrlC);
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
 
     curl::curl_header httpheader = {
@@ -80,10 +76,9 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
     };
     curl.add<CURLOPT_HTTPHEADER>(httpheader.get());
 
-    char* postData = new char[14 + m_accountid.length() + 1 + 1];
-    strcpy(postData, "{\"accountId\":\"");
-    strncat(postData, m_accountid.data(), m_accountid.length());
-    strncat(postData, "\"}", 2);
+    auto accountId = "{\"accountId\":\"" + m_accountid + "\"}";
+    char* postData = const_cast<char*>(accountId.c_str());
+
     curl.add<CURLOPT_POSTFIELDS>(postData);
     curl.add<CURLOPT_POST>(1L);
 
@@ -121,9 +116,6 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
 
         result.success = false;
     }
-
-    delete[] apiUrl;
-    delete[] postData;
 
     return result;
 }
