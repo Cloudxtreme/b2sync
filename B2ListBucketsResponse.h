@@ -11,8 +11,10 @@
 
 class B2ListBucketsResponse {
 public:
-    void AddBucket(const B2Bucket &bucket);
+    B2ListBucketsResponse()  { this->m_buckets = std::vector<B2Bucket>(); }
+
     const std::vector<B2Bucket> getBuckets() const;
+    const void addBucket(const B2Bucket &bucket) { m_buckets.push_back(bucket); };
 private:
     std::vector<B2Bucket> m_buckets;
 };

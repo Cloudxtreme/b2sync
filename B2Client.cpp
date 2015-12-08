@@ -93,33 +93,24 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
 
         curl.perform();
 
-        /*
-{
-  "buckets": [
-    {
-      "accountId": "account id be here",
-      "bucketId": "bucket id be here",
-      "bucketName": "bucket name",
-      "bucketType": "allPrivate"
-    }
-  ]
-}
-         */
         boost::property_tree::ptree jsonpt;
         std::stringstream ss;
         auto datastr = data.str();
         ss << data.str();
         boost::property_tree::json_parser::read_json(ss, jsonpt);
 
+        result.result = std::make_shared<B2ListBucketsResponse>();
+
         for(auto bucket : jsonpt.get_child("buckets")) {
-            cout << bucket.second.get<std::string>("bucketId") << std::endl;
-            cout << bucket.second.get<std::string>("bucketName") << std::endl;
+            auto b2Bucket = B2Bucket(
+                    bucket.second.get<std::string>("accountId"),
+                    bucket.second.get<std::string>("bucketId"),
+                    bucket.second.get<std::string>("bucketName"),
+                    bucket.second.get<std::string>("bucketType")
+            );
+            result.result->addBucket(b2Bucket);
         }
-/*        result.result = std::make_shared<B2AuthorizeAccountResponse>(
-                jsonpt.get<std::string>("authorizationToken"),
-                jsonpt.get<std::string>("apiUrl"),
-                jsonpt.get<std::string>("downloadUrl")
-        );*/
+
         result.success = true;
     }
     catch (curl_easy_exception e) {

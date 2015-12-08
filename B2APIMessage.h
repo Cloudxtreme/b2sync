@@ -8,6 +8,7 @@
 
 template <typename T>
 struct B2APIMessage {
+
     bool success;
     std::shared_ptr<T> result;
 };
