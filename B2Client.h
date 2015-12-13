@@ -23,6 +23,11 @@ public:
     B2APIMessage<B2AuthorizeAccountResponse> authenticate(const string &accountId, const string &applicationKey);
     void authenticate(const string &token, const string &apiUrl, const string &downloadUrl);
     B2APIMessage<B2ListBucketsResponse> listBuckets();
+
+protected:
+    std::unique_ptr<curl::curl_easy> prepareAuthorizedAPICall(const std::string &url,
+                                                              const std::vector<std::pair<std::string, std::string>> &post_data,
+                                                              std::ostringstream &curl_result);
 };
 
 #endif //B2SYNC_B2CLIENT_H

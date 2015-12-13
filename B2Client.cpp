@@ -57,35 +57,13 @@ void B2Client::authenticate(const string &token, const string &apiUrl, const str
 }
 
 B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
-    curl::curl_easy curl;
-
     std::ostringstream data;
-    std::ostringstream header;
-    curl::curl_ios<ostringstream> body(data);
-    curl.add<CURLOPT_WRITEFUNCTION>(body.get_function());
-    curl.add<CURLOPT_WRITEDATA>(body.get_stream());
-
-    auto apiUrl = m_auth->getAPIUrl() + "/b2api/v1/b2_list_buckets";
-    char* apiUrlC = const_cast<char*>(apiUrl.c_str());
-
-    curl.add<CURLOPT_URL>(apiUrlC);
-    curl.add<CURLOPT_FOLLOWLOCATION>(1L);
-
-    curl::curl_header httpheader = {
-        "Authorization: " + m_auth->getToken()
-    };
-    curl.add<CURLOPT_HTTPHEADER>(httpheader.get());
-
-    auto accountId = "{\"accountId\":\"" + m_accountid + "\"}";
-    char* postData = const_cast<char*>(accountId.c_str());
-
-    curl.add<CURLOPT_POSTFIELDS>(postData);
-    curl.add<CURLOPT_POST>(1L);
+    auto curl = prepareAuthorizedAPICall("/b2api/v1/b2_list_buckets", {}, data);
 
     B2APIMessage<B2ListBucketsResponse> result;
 
     try {
-        curl.perform();
+        curl->perform();
 
         boost::property_tree::ptree jsonpt;
         std::stringstream ss;
@@ -111,4 +89,39 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
     }
 
     return result;
+}
+
+std::unique_ptr<curl::curl_easy> B2Client::prepareAuthorizedAPICall(const std::string &url,
+                                                                    const std::vector<std::pair<std::string, std::string>> &post_data,
+                                                                    std::ostringstream &curl_result) {
+    std::unique_ptr<curl::curl_easy> curl;
+
+    std::ostringstream header;
+    curl::curl_ios<ostringstream> body(curl_result);
+    curl->add<CURLOPT_WRITEFUNCTION>(body.get_function());
+    curl->add<CURLOPT_WRITEDATA>(body.get_stream());
+
+    auto apiUrl = m_auth->getAPIUrl() + url;
+    char* apiUrlC = const_cast<char*>(apiUrl.c_str());
+
+    curl->add<CURLOPT_URL>(apiUrlC);
+    curl->add<CURLOPT_FOLLOWLOCATION>(1L);
+
+    curl::curl_header httpheader = {
+            "Authorization: " + m_auth->getToken()
+    };
+
+    curl->add<CURLOPT_HTTPHEADER>(httpheader.get());
+
+    auto accountId = "{\"accountId\":\"" + m_accountid + "\"}";
+    for(auto post : post_data) {
+        accountId += "\r\n" + post.first + ": " + post.second;
+    }
+
+    char* postData = const_cast<char*>(accountId.c_str());
+
+    curl->add<CURLOPT_POSTFIELDS>(postData);
+    curl->add<CURLOPT_POST>(1L);
+
+    return curl;
 }
