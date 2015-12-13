@@ -85,7 +85,6 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
     B2APIMessage<B2ListBucketsResponse> result;
 
     try {
-
         curl.perform();
 
         boost::property_tree::ptree jsonpt;
@@ -97,13 +96,7 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
         result.result = std::make_shared<B2ListBucketsResponse>();
 
         for(auto bucket : jsonpt.get_child("buckets")) {
-            auto b2Bucket = B2Bucket(
-                    bucket.second.get<std::string>("accountId"),
-                    bucket.second.get<std::string>("bucketId"),
-                    bucket.second.get<std::string>("bucketName"),
-                    bucket.second.get<std::string>("bucketType")
-            );
-            result.result->addBucket(b2Bucket);
+            result.result->addBucket(B2Bucket(bucket.second));
         }
 
         result.success = true;
