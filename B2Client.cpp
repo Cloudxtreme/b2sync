@@ -27,12 +27,17 @@ B2APIMessage<B2AuthorizeAccountResponse> B2Client::authenticate(const string &ac
         ss << data.str();
         boost::property_tree::json_parser::read_json(ss, jsonpt);
 
-        result.result = std::make_shared<B2AuthorizeAccountResponse>(
-                jsonpt.get<std::string>("authorizationToken"),
-                jsonpt.get<std::string>("apiUrl"),
-                jsonpt.get<std::string>("downloadUrl")
-        );
-        result.success = true;
+        auto status = jsonpt.get<int>("status");
+        if (status == 200) {
+            result.result = std::make_shared<B2AuthorizeAccountResponse>(
+                    jsonpt.get<std::string>("authorizationToken"),
+                    jsonpt.get<std::string>("apiUrl"),
+                    jsonpt.get<std::string>("downloadUrl")
+            );
+            result.success = true;
+        } else {
+            cout << "Could not authenticate: " << jsonpt.get<std::string>("message") << std::endl;
+        }
 
         m_auth = result.result;
     }
@@ -73,11 +78,16 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
 
         result.result = std::make_shared<B2ListBucketsResponse>();
 
-        for(auto bucket : jsonpt.get_child("buckets")) {
-            result.result->addBucket(B2Bucket(bucket.second));
-        }
+        auto status = jsonpt.get<int>("status");
+        if (status == 200) {
+            for(auto bucket : jsonpt.get_child("buckets")) {
+                result.result->addBucket(B2Bucket(bucket.second));
+            }
 
-        result.success = true;
+            result.success = true;
+        } else {
+            cout << "Error listing buckets: " << jsonpt.get<std::string>("message") << std::endl;
+        }
     }
     catch (curl_easy_exception e) {
         result.success = false;
