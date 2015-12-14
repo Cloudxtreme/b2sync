@@ -3,18 +3,22 @@
 #include "B2Client.h"
 
 B2APIMessage<B2AuthorizeAccountResponse> B2Client::authenticate(const string &accountId, const string &applicationKey) {
-    curl::curl_easy curl;
+    using namespace std;
+    using namespace boost::property_tree;
+    using namespace curl;
 
-    std::ostringstream data;
-    std::ostringstream header;
-    curl::curl_ios<ostringstream> body(data);
+    curl_easy curl;
+
+    ostringstream data;
+    ostringstream header;
+    curl_ios<ostringstream> body(data);
     curl.add<CURLOPT_WRITEFUNCTION>(body.get_function());
     curl.add<CURLOPT_WRITEDATA>(body.get_stream());
 
     curl.add<CURLOPT_URL>("https://api.backblaze.com/b2api/v1/b2_authorize_account");
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
 
-    std::string authHeader = accountId + ":" + applicationKey;
+    string authHeader = accountId + ":" + applicationKey;
     curl.add<CURLOPT_USERPWD>(authHeader.c_str());
 
     B2APIMessage<B2AuthorizeAccountResponse> result;
@@ -22,21 +26,21 @@ B2APIMessage<B2AuthorizeAccountResponse> B2Client::authenticate(const string &ac
     try {
         curl.perform();
 
-        boost::property_tree::ptree jsonpt;
-        std::stringstream ss;
+        ptree jsonpt;
+        stringstream ss;
         ss << data.str();
-        boost::property_tree::json_parser::read_json(ss, jsonpt);
+        json_parser::read_json(ss, jsonpt);
 
         auto status = jsonpt.get<int>("status");
         if (status == 200) {
-            result.result = std::make_shared<B2AuthorizeAccountResponse>(
-                    jsonpt.get<std::string>("authorizationToken"),
-                    jsonpt.get<std::string>("apiUrl"),
-                    jsonpt.get<std::string>("downloadUrl")
+            result.result = make_shared<B2AuthorizeAccountResponse>(
+                    jsonpt.get<string>("authorizationToken"),
+                    jsonpt.get<string>("apiUrl"),
+                    jsonpt.get<string>("downloadUrl")
             );
             result.success = true;
         } else {
-            cout << "Could not authenticate: " << jsonpt.get<std::string>("message") << std::endl;
+            cout << "Could not authenticate: " << jsonpt.get<string>("message") << std::endl;
         }
 
         m_auth = result.result;
@@ -44,7 +48,7 @@ B2APIMessage<B2AuthorizeAccountResponse> B2Client::authenticate(const string &ac
     catch (curl_easy_exception e) {
         result.success = false;
     }
-    catch (boost::property_tree::ptree_bad_path e) {
+    catch (ptree_bad_path e) {
         cout << "Could not access JSON property from API result: " << e.what() << std::endl;
 
         result.success = false;
@@ -62,7 +66,10 @@ void B2Client::authenticate(const string &token, const string &apiUrl, const str
 }
 
 B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
-    std::ostringstream data;
+    using namespace std;
+    using namespace boost::property_tree;
+
+    ostringstream data;
     auto curl = prepareAuthorizedAPICall("/b2api/v1/b2_list_buckets", {}, data);
 
     B2APIMessage<B2ListBucketsResponse> result;
@@ -70,13 +77,13 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
     try {
         curl->perform();
 
-        boost::property_tree::ptree jsonpt;
-        std::stringstream ss;
+        ptree jsonpt;
+        stringstream ss;
         auto datastr = data.str();
         ss << data.str();
-        boost::property_tree::json_parser::read_json(ss, jsonpt);
+        json_parser::read_json(ss, jsonpt);
 
-        result.result = std::make_shared<B2ListBucketsResponse>();
+        result.result = make_shared<B2ListBucketsResponse>();
 
         auto status = jsonpt.get<int>("status");
         if (status == 200) {
@@ -86,14 +93,14 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
 
             result.success = true;
         } else {
-            cout << "Error listing buckets: " << jsonpt.get<std::string>("message") << std::endl;
+            cout << "Error listing buckets: " << jsonpt.get<string>("message") << endl;
         }
     }
     catch (curl_easy_exception e) {
         result.success = false;
     }
-    catch (boost::property_tree::ptree_bad_path e) {
-        cout << "Could not access JSON property from API result: " << e.what() << std::endl;
+    catch (ptree_bad_path e) {
+        cout << "Could not access JSON property from API result: " << e.what() << endl;
 
         result.success = false;
     }
@@ -104,10 +111,13 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
 std::unique_ptr<curl::curl_easy> B2Client::prepareAuthorizedAPICall(const std::string &url,
                                                                     const std::vector<std::pair<std::string, std::string>> &post_data,
                                                                     std::ostringstream &curl_result) {
-    std::unique_ptr<curl::curl_easy> curl;
+    using namespace std;
+    using namespace curl;
 
-    std::ostringstream header;
-    curl::curl_ios<ostringstream> body(curl_result);
+    unique_ptr<curl_easy> curl;
+
+    ostringstream header;
+    curl_ios<ostringstream> body(curl_result);
     curl->add<CURLOPT_WRITEFUNCTION>(body.get_function());
     curl->add<CURLOPT_WRITEDATA>(body.get_stream());
 
@@ -117,7 +127,7 @@ std::unique_ptr<curl::curl_easy> B2Client::prepareAuthorizedAPICall(const std::s
     curl->add<CURLOPT_URL>(apiUrlC);
     curl->add<CURLOPT_FOLLOWLOCATION>(1L);
 
-    curl::curl_header httpheader = {
+    curl_header httpheader = {
             "Authorization: " + m_auth->getToken()
     };
 
