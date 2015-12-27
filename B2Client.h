@@ -24,6 +24,8 @@ public:
     void authenticate(const std::string &token, const std::string &apiUrl, const std::string &downloadUrl);
     B2APIMessage<B2ListBucketsResponse> listBuckets();
     B2APIMessage<B2Bucket> createBucket(const std::string &bucketName, const std::string &bucketType) const;
+    B2APIMessage<void> deleteBucket(const B2Bucket bucket) const;
+
 protected:
     boost::property_tree::ptree parse_json(const std::string responseText) const;
 };

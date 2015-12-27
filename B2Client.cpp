@@ -4,6 +4,7 @@
 #define API_URL_B2_AUTHORIZE_ACCOUNT    "https://api.backblaze.com/b2api/v1/b2_authorize_account"
 #define API_URL_B2_LIST_BUCKETS         "/b2api/v1/b2_list_buckets"
 #define API_URL_B2_CREATE_BUCKET        "/b2api/v1/b2_create_bucket"
+#define API_URL_B2_DELETE_BUCKET        "/b2api/v1/b2_delete_bucket"
 
 /*
  * Construct and set up JSON parser
@@ -138,6 +139,42 @@ B2APIMessage<B2Bucket> B2Client::createBucket(const std::string &bucketName, con
                     json.get<std::string>("bucketType")
             );
             // TODO: Handle result 400 with code duplicate_bucket_name for duplicates
+        } else {
+            std::cout << "Error when connecting to API: " << response.text << std::endl;
+        }
+    }
+    catch (ptree_bad_path e) {
+        std::cout << "Could not access JSON property from API result: " << e.what() << std::endl;
+
+        result.success = false;
+    }
+
+    return result;
+}
+
+B2APIMessage<void> B2Client::deleteBucket(const B2Bucket bucket) const {
+    using namespace boost::property_tree;
+
+    B2APIMessage<void> result;
+
+    try {
+        auto response = cpr::Post(
+                cpr::Url{m_auth->getAPIUrl() + API_URL_B2_DELETE_BUCKET},
+                cpr::Header{
+                        {"Authorization", m_auth->getToken()}
+                },
+                cpr::Body{"{\"accountId\":\"" + m_accountid + "\"," +
+                          "\"bucketId\":\"" + bucket.getId() + "\"}"}
+        );
+
+        if (response.error) {
+            std::cout << "Error deleting bucket: " << response.error.message << std::endl;
+        } else if (response.status_code == 200) {
+            auto json = parse_json(response.text);
+
+            result.success = true;
+
+            // TODO: Handle error when bucket contains files
         } else {
             std::cout << "Error when connecting to API: " << response.text << std::endl;
         }

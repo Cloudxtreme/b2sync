@@ -55,13 +55,20 @@ int main() {
     if (buckets.success) {
         for (auto bucket : buckets.result->getBuckets()) {
             cout << "Found bucket " << bucket.getName() << " with access " << bucket.getBucketType() << std::endl;
+
+            if (bucket.getName().find("kjashdkjsatestbucket") != std::string::npos) {
+                auto result = client.deleteBucket(bucket);
+                if (result.success) {
+                    cout << "  bucket was deleted" << std::endl;
+                }
+            }
         }
     }
 
-    auto newBucket = client.createBucket("kjashdkjsatestbucket", B2Bucket::TYPE_PRIVATE);
+    /*auto newBucket = client.createBucket("kjashdkjsatestbucket", B2Bucket::TYPE_PRIVATE);
     if (newBucket.success) {
         cout << "New bucket " << newBucket.result->getName() << "(ID " << newBucket.result->getId() << ") created" << std::endl;
-    }
+    }*/
 
     return 0;
 }
