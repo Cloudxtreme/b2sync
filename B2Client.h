@@ -23,6 +23,9 @@ public:
     B2APIMessage<B2AuthorizeAccountResponse> authenticate(const std::string &accountId, const std::string &applicationKey);
     void authenticate(const std::string &token, const std::string &apiUrl, const std::string &downloadUrl);
     B2APIMessage<B2ListBucketsResponse> listBuckets();
+
+protected:
+    boost::property_tree::ptree parse_json(const std::string responseText) const;
 };
 
 #endif //B2SYNC_B2CLIENT_H

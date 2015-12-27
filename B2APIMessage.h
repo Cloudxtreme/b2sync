@@ -11,6 +11,8 @@ struct B2APIMessage {
 
     bool success;
     std::shared_ptr<T> result;
+
+    B2APIMessage() : success(false) { };
 };
 
 

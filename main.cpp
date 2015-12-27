@@ -52,8 +52,10 @@ int main() {
     }
 
     auto buckets = client.listBuckets();
-    for(auto bucket : buckets.result->getBuckets()) {
-        cout << "Found bucket " << bucket.getName() << " with access " << bucket.getBucketType() << std::endl;
+    if (buckets.success) {
+        for (auto bucket : buckets.result->getBuckets()) {
+            cout << "Found bucket " << bucket.getName() << " with access " << bucket.getBucketType() << std::endl;
+        }
     }
 
     return 0;

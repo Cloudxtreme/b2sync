@@ -1,36 +1,50 @@
 #include "B2Client.h"
 #include <iostream>
 
-B2APIMessage<B2AuthorizeAccountResponse> B2Client::authenticate(const std::string &accountId, const std::string &applicationKey) {
+#define API_URL_B2_AUTHORIZE_ACCOUNT    "https://api.backblaze.com/b2api/v1/b2_authorize_account"
+#define API_URL_B2_LIST_BUCKETS         "/b2api/v1/b2_list_buckets"
+
+/*
+ * Construct and set up JSON parser
+ */
+boost::property_tree::ptree B2Client::parse_json(const std::string responseText) const {
+    // Create JSON-Parser
+    boost::property_tree::ptree jsonpt;
+
+    std::stringstream ss;
+    // Copy Response text to Parser stream
+
+    ss << responseText;
+
+    // And now parse the result
+    boost::property_tree::json_parser::read_json(ss, jsonpt);
+
+    return jsonpt;
+}
+
+
+B2APIMessage<B2AuthorizeAccountResponse> B2Client::authenticate(const std::string &accountId,
+                                                                const std::string &applicationKey) {
     using namespace boost::property_tree;
 
     B2APIMessage<B2AuthorizeAccountResponse> result;
-    result.success = false;
 
     try {
         auto response = cpr::Get(
-          cpr::Url{"https://api.backblaze.com/b2api/v1/b2_authorize_account"},
-          cpr::Authentication{accountId, applicationKey}//,
-          //cpr::Timeout{2500}
+                cpr::Url{API_URL_B2_AUTHORIZE_ACCOUNT},
+                cpr::Authentication{accountId, applicationKey},
+                cpr::Timeout{5000}
         );
 
         if (response.error) {
             std::cout << "Error logging in: " << response.error.message << std::endl;
-        }
-        if (response.status_code == 200) {
-            // Create JSON-Parser
-            ptree jsonpt;
-            std::stringstream ss;
-            // Copy Response text to Parser stream
-            ss << response.text;
-            // And now parse the result
-            json_parser::read_json(ss, jsonpt);
-
+        } else if (response.status_code == 200) {
+            auto json = parse_json(response.text);
 
             result.result = std::make_shared<B2AuthorizeAccountResponse>(
-                    jsonpt.get<std::string>("authorizationToken"),
-                    jsonpt.get<std::string>("apiUrl"),
-                    jsonpt.get<std::string>("downloadUrl")
+                    json.get<std::string>("authorizationToken"),
+                    json.get<std::string>("apiUrl"),
+                    json.get<std::string>("downloadUrl")
             );
             result.success = true;
 
@@ -55,54 +69,40 @@ void B2Client::authenticate(const std::string &token, const std::string &apiUrl,
 }
 
 B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
-    using namespace std;
     using namespace boost::property_tree;
-
-    ostringstream data;
-    //auto curl = prepareAuthorizedAPICall("/b2api/v1/b2_list_buckets", {}, data);
-
-    /*
-     * curl_header httpheader = {
-            "Authorization: " + m_auth->getToken()
-    };
-
-    curl->add<CURLOPT_HTTPHEADER>(httpheader.get());
-
-    auto accountId = "{\"accountId\":\"" + m_accountid + "\"}";
-    for(auto post : post_data) {
-        accountId += "\r\n" + post.first + ": " + post.second;
-    }
-     */
 
     B2APIMessage<B2ListBucketsResponse> result;
 
     try {
-        //curl->perform();
+        auto response = cpr::Post(
+                cpr::Url{m_auth->getAPIUrl() + API_URL_B2_LIST_BUCKETS},
+                cpr::Header{
+                        {"Authorization", m_auth->getToken()}
+                },
+                cpr::Body{"{\"accountId\":\"" + m_accountid + "\"}"}
+        );
 
-        ptree jsonpt;
-        stringstream ss;
-        auto datastr = data.str();
-        ss << data.str();
-        json_parser::read_json(ss, jsonpt);
-
-        result.result = make_shared<B2ListBucketsResponse>();
-
-        auto status = jsonpt.get<int>("status");
-        if (status == 200) {
-            for(auto bucket : jsonpt.get_child("buckets")) {
-                result.result->addBucket(B2Bucket(bucket.second));
-            }
+        if (response.error) {
+            std::cout << "Error listing buckets: " << response.error.message << std::endl;
+        } else if (response.status_code == 200) {
+            auto json = parse_json(response.text);
 
             result.success = true;
+
+            result.result = std::make_shared<B2ListBucketsResponse>();
+            for (auto bucket : json.get_child("buckets")) {
+                result.result->addBucket(B2Bucket(bucket.second));
+            }
         } else {
-            cout << "Error listing buckets: " << jsonpt.get<string>("message") << endl;
+            std::cout << "Error when connecting to API: " << response.text << std::endl;
         }
     }
     catch (ptree_bad_path e) {
-        cout << "Could not access JSON property from API result: " << e.what() << endl;
+        std::cout << "Could not access JSON property from API result: " << e.what() << std::endl;
 
         result.success = false;
     }
 
     return result;
 }
+
