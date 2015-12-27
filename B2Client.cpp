@@ -108,7 +108,7 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
     return result;
 }
 
-B2APIMessage<B2Bucket> B2Client::createBucket(const std::string &bucketName, const std::string &bucketType) const {
+B2APIMessage<B2Bucket> B2Client::createBucket(const std::string &bucketName, const B2BucketType &bucketType) const {
     using namespace boost::property_tree;
 
     B2APIMessage<B2Bucket> result;
@@ -121,7 +121,7 @@ B2APIMessage<B2Bucket> B2Client::createBucket(const std::string &bucketName, con
                 },
                 cpr::Body{"{\"accountId\":\"" + m_accountid + "\"," +
                           "\"bucketName\":\"" + bucketName + "\"," +
-                          "\"bucketType\":\"" + bucketType + "\"" +
+                          "\"bucketType\":\"" + B2Bucket::StringFromType(bucketType) + "\"" +
                           "}"}
         );
 
@@ -136,7 +136,7 @@ B2APIMessage<B2Bucket> B2Client::createBucket(const std::string &bucketName, con
                     m_accountid,
                     json.get<std::string>("bucketId"),
                     json.get<std::string>("bucketName"),
-                    json.get<std::string>("bucketType")
+                    B2Bucket::TypeFromString(json.get<std::string>("bucketType"))
             );
             // TODO: Handle result 400 with code duplicate_bucket_name for duplicates
         } else {

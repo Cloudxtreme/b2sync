@@ -8,12 +8,11 @@
 #include <string>
 #include <boost/property_tree/ptree.hpp>
 
+enum class B2BucketType { ALLPUBLIC, ALLPRIVATE };
+
 class B2Bucket {
 public:
-    static const std::string TYPE_PUBLIC;
-    static const std::string TYPE_PRIVATE;
-
-    B2Bucket(const std::string &accountId, const std::string &id, const std::string &name, const std::string &buckettype);
+    B2Bucket(const std::string &accountId, const std::string &id, const std::string &name, const B2BucketType &buckettype);
     B2Bucket(const boost::property_tree::ptree &ptree);
 
     const std::string &getAccountId() const {
@@ -28,16 +27,25 @@ public:
         return m_name;
     }
 
-    const std::string &getBucketType() const {
+    const B2BucketType &getBucketType() const {
         return m_buckettype;
     }
+
+    static const B2BucketType TypeFromString(const std::string &typeString);
+    static const std::string StringFromType(const B2BucketType &type);
 
 private:
     std::string m_accountId;
     std::string m_id;
     std::string m_name;
-    std::string m_buckettype;
+    B2BucketType m_buckettype;
 };
+
+
+// Output operator for bucket types enum
+inline std::ostream& operator<<(std::ostream &ostream, const B2BucketType &bt) {
+    return ostream << B2Bucket::StringFromType(bt);
+}
 
 
 #endif //B2SYNC_B2BUCKET_H

@@ -65,7 +65,7 @@ int main() {
         }
     }
 
-    /*auto newBucket = client.createBucket("kjashdkjsatestbucket", B2Bucket::TYPE_PRIVATE);
+    /*auto newBucket = client.createBucket("kjashdkjsatestbucket", B2BucketType::ALLPUBLIC);
     if (newBucket.success) {
         cout << "New bucket " << newBucket.result->getName() << "(ID " << newBucket.result->getId() << ") created" << std::endl;
     }*/

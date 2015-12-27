@@ -23,7 +23,7 @@ public:
     B2APIMessage<B2AuthorizeAccountResponse> authenticate(const std::string &accountId, const std::string &applicationKey);
     void authenticate(const std::string &token, const std::string &apiUrl, const std::string &downloadUrl);
     B2APIMessage<B2ListBucketsResponse> listBuckets();
-    B2APIMessage<B2Bucket> createBucket(const std::string &bucketName, const std::string &bucketType) const;
+    B2APIMessage<B2Bucket> createBucket(const std::string &bucketName, const B2BucketType &bucketType) const;
     B2APIMessage<void> deleteBucket(const B2Bucket bucket) const;
 
 protected:
