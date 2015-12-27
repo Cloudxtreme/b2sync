@@ -3,6 +3,7 @@
 
 #define API_URL_B2_AUTHORIZE_ACCOUNT    "https://api.backblaze.com/b2api/v1/b2_authorize_account"
 #define API_URL_B2_LIST_BUCKETS         "/b2api/v1/b2_list_buckets"
+#define API_URL_B2_CREATE_BUCKET        "/b2api/v1/b2_create_bucket"
 
 /*
  * Construct and set up JSON parser
@@ -106,3 +107,46 @@ B2APIMessage<B2ListBucketsResponse> B2Client::listBuckets() {
     return result;
 }
 
+B2APIMessage<B2Bucket> B2Client::createBucket(const std::string &bucketName, const std::string &bucketType) const {
+    using namespace boost::property_tree;
+
+    B2APIMessage<B2Bucket> result;
+
+    try {
+        auto response = cpr::Post(
+                cpr::Url{m_auth->getAPIUrl() + API_URL_B2_CREATE_BUCKET},
+                cpr::Header{
+                        {"Authorization", m_auth->getToken()}
+                },
+                cpr::Body{"{\"accountId\":\"" + m_accountid + "\"," +
+                          "\"bucketName\":\"" + bucketName + "\"," +
+                          "\"bucketType\":\"" + bucketType + "\"" +
+                          "}"}
+        );
+
+        if (response.error) {
+            std::cout << "Error creating bucket: " << response.error.message << std::endl;
+        } else if (response.status_code == 200) {
+            auto json = parse_json(response.text);
+
+            result.success = true;
+
+            result.result = std::make_shared<B2Bucket>(
+                    m_accountid,
+                    json.get<std::string>("bucketId"),
+                    json.get<std::string>("bucketName"),
+                    json.get<std::string>("bucketType")
+            );
+            // TODO: Handle result 400 with code duplicate_bucket_name for duplicates
+        } else {
+            std::cout << "Error when connecting to API: " << response.text << std::endl;
+        }
+    }
+    catch (ptree_bad_path e) {
+        std::cout << "Could not access JSON property from API result: " << e.what() << std::endl;
+
+        result.success = false;
+    }
+
+    return result;
+}

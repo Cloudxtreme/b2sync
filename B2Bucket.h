@@ -10,6 +10,9 @@
 
 class B2Bucket {
 public:
+    static const std::string TYPE_PUBLIC;
+    static const std::string TYPE_PRIVATE;
+
     B2Bucket(const std::string &accountId, const std::string &id, const std::string &name, const std::string &buckettype);
     B2Bucket(const boost::property_tree::ptree &ptree);
 
