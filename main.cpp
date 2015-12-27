@@ -55,5 +55,6 @@ int main() {
     for(auto bucket : buckets.result->getBuckets()) {
         cout << "Found bucket " << bucket.getName() << " with access " << bucket.getBucketType() << std::endl;
     }
+
     return 0;
 }

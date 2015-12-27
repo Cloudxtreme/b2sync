@@ -13,15 +13,15 @@ public:
     {
     }
 
-    const string &getToken() const {
+    const std::string &getToken() const {
         return m_token;
     }
 
-    const string &getAPIUrl() const {
+    const std::string &getAPIUrl() const {
         return m_apiurl;
     }
 
-    const string &getDownloadUrl() const {
+    const std::string &getDownloadUrl() const {
         return m_downloadurl;
     }
 
