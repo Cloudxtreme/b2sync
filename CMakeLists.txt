@@ -9,11 +9,13 @@ add_executable(b2sync ${SOURCE_FILES})
 # Add config file
 file(COPY b2config.info DESTINATION "${b2sync_BINARY_DIR}")
 
-# Include gitcpp
-add_subdirectory(curlcpp)
-include_directories(${CURLCPP_SOURCE_DIR}/include)
-
-target_link_libraries(b2sync curlcpp)
+# Include cpr
+# Use the system installed cURL library to also get system defined CA cert stores, the bundled CPR does not seem to include
+# CA certificates or does not know how to find them and as I have a system libcURL working I'd rather use that right now
+set(USE_SYSTEM_CURL ON)
+add_subdirectory(cpr)
+include_directories(${CPR_INCLUDE_DIRS})
+target_link_libraries(b2sync ${CPR_LIBRARIES})
 
 # Include Boost
 set(Boost_USE_STATIC_LIBS ON)

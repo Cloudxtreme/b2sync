@@ -5,7 +5,7 @@
 #ifndef B2SYNC_B2CLIENT_H
 #define B2SYNC_B2CLIENT_H
 
-#include <curl_easy.h>
+#include <cpr/cpr.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "B2APIMessage.h"
@@ -23,11 +23,6 @@ public:
     B2APIMessage<B2AuthorizeAccountResponse> authenticate(const std::string &accountId, const std::string &applicationKey);
     void authenticate(const std::string &token, const std::string &apiUrl, const std::string &downloadUrl);
     B2APIMessage<B2ListBucketsResponse> listBuckets();
-
-protected:
-    std::unique_ptr<curl::curl_easy> prepareAuthorizedAPICall(const std::string &url,
-                                                              const std::vector<std::pair<std::string, std::string>> &post_data,
-                                                              std::ostringstream &curl_result);
 };
 
 #endif //B2SYNC_B2CLIENT_H
